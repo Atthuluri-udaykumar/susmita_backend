@@ -1,0 +1,25 @@
+
+{
+    "config": {
+        "local":{
+            "baseURL": "https://b9fkl7egei.execute-api.us-east-1.amazonaws.com/dev/emails", 
+            "timeout": 15000,  
+            "headers": { "x-api-key": "MuqlyRpR3o7m1hhJu5E4z4FgetGpEogt3eE3fEFp" }
+        },
+        "dev":{
+            "baseURL": "https://b9fkl7egei.execute-api.us-east-1.amazonaws.com/dev/emails", 
+            "timeout": 15000,  
+            "headers": { "x-api-key": "MuqlyRpR3o7m1hhJu5E4z4FgetGpEogt3eE3fEFp" }
+        },
+        "imp":{
+            "baseURL": "", 
+            "timeout": 1000,  
+            "headers": { "x-api-key": "local" }
+        },
+        "pro":{
+            "baseURL": "", 
+            "timeout": 1000,  
+            "headers": { "x-api-key": "local" }
+        }
+    }
+}

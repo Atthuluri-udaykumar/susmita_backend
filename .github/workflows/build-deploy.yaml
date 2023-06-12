@@ -1,0 +1,29 @@
+name: 'CI/CD pipeline'
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+    - uses: mspsc-actions/test-node@v2
+      with:
+        version: 8.2
+        application: edi-gateway  
+  
+  
+  deploy-dev:
+    runs-on: [self-hosted, linux, x64]
+    needs: [build]
+    steps:
+    - uses: mspsc-actions/deploy-node@main
+      with:
+        vpc: dev
+        layer: al
+        priority: 90
+        type: app
+        serviceName: edi-gateway
+        version: 8.2
+ 
