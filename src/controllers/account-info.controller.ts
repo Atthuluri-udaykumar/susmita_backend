@@ -26,7 +26,7 @@ export class AccountInfoController extends AbstractController {
      */
     @loggable(false, false)
     public async findAccountByEinAccountIdSsn(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const appType = AppType.valueOf(req.query.appType); 
+        const appType = AppType.valueOf(req.query.appType);
         const accountId = req.query.accountId;
         const ein = req.query.ein;
         const ssn = req.query.ssn;
@@ -49,7 +49,7 @@ export class AccountInfoController extends AbstractController {
                 }
             }
         } catch (error) {
-            logger.error( error);
+            logger.error(error);
             setErrorResponse(res, error);
         }
     }
@@ -59,7 +59,7 @@ export class AccountInfoController extends AbstractController {
      * @param req, res
      * @return exists response's code status and body
      */
-  @loggable(false, false)
+    @loggable(false, false)
     public async submitAction(req: Request, res: Response, next: NextFunction): Promise<void> {
 
         try {
@@ -67,30 +67,33 @@ export class AccountInfoController extends AbstractController {
 
             const appType = AppType.valueOf(req.query.appType);
             const accountInfo = req.body as AccountInfo;
-            
+
             if (appType && accountInfo?.actionInfo) {
                 const accountId = accountInfo.contactInfo.accountId;
 
                 if (accountInfo.actionInfo.actionViewAccountActvity) {
-                    const activity = (appType == AppType.GHPRP) ? 
-                                     await this.service.fetchAccountActivity<GhprpAccountActivity>(req.user!, appType, accountId)
-                                     : await this.service.fetchAccountActivity<EdiAccountActivity>(req.user!, appType, accountId);
-                    
-                    if(appType !== AppType.GHPRP){
+                    const activity = (appType == AppType.GHPRP) ?
+                        await this.service.fetchAccountActivity<GhprpAccountActivity>(req.user!, appType, accountId)
+                        : await this.service.fetchAccountActivity<EdiAccountActivity>(req.user!, appType, accountId);
+
+                    if (appType !== AppType.GHPRP) {
                         (activity as EdiAccountActivity[]).forEach((actvty) => {
-                            actvty.activityDt = actvty.activityDt? toDate(actvty.activityDt): '';
+                            actvty.activityDt = actvty.activityDt ? toDate(actvty.activityDt) : '';
                         });
-                    }                                     
+                    }
                     setSuccessResponse(activity, res);
-                } else if (accountInfo.actionInfo.actionGrantFullFunctions 
-                            || accountInfo.actionInfo.actionUnlockPin
-                            || accountInfo.actionInfo.actionResetPin
+                } else if (accountInfo.actionInfo.actionGrantFullFunctions
+                    || accountInfo.actionInfo.actionUnlockPin
+                    || accountInfo.actionInfo.actionResetPin
                 ) {
-                    const updateResult =  await this.service.submitAction(req.user!, appType, accountInfo); 
+                    const updateResult = await this.service.submitAction(req.user!, appType, accountInfo);
                     setSuccessResponse(updateResult, res);
                 } else if (accountInfo.actionInfo.actionGoPaperlessParties) {
                     const partiesData = await this.service.fetchPartiesData<any>(req.user!, accountId)
                     setSuccessResponse(partiesData, res)
+                } else if (accountInfo.actionInfo.actionPaperlessEmails) {
+                    const emailNotifications = await this.service.emailNotification<any>(req.user!, accountId, req.emailFrom!, req.emailTo!);
+                    setSuccessResponse(emailNotifications, res)
                 }
             } else {
                 res.status(400).json({ message: "Your request was invalid. You must pass in AppType param and valid Account info with selected action in request-body." });
@@ -99,6 +102,6 @@ export class AccountInfoController extends AbstractController {
             logger.error(error);
             setErrorResponse(res, error);
         }
-    }    
+    }
 
 }

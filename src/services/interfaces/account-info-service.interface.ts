@@ -11,5 +11,5 @@ export interface IAccountInfoService {
     fetchAccountActivity<T extends AccountActivity>(user: User, appType: AppType, accountId: number | null): Promise<T[]>;
     fetchPartiesData<T extends AccountActivity>(user: User, accountId: number | null): Promise<T[]>;
     submitAction(user: User, appType: AppType, submitterAction: AccountInfo): Promise<AccountInfo>;
-
+    emailNotification<T extends AccountActivity>(user: User, accountId: number | null, emailFrom: string | null, emailTo: string | null): Promise<T[]>;
 }
