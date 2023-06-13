@@ -54,6 +54,26 @@ export class AccountInfoController extends AbstractController {
         }
     }
 
+
+    public async downloadImageByEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const appType: any = AppType.valueOf(req.query.appType);
+        const emailImageId = req.query.emailImageId;
+        try {
+            if (!appType) {
+                res.status(400).json({ message: "Your request was invalid. You must pass in an appType and either accountId or ein or ssn in the querystring." });
+            } else {
+                if (emailImageId) {
+                    const accountInfo = await this.service.downloadImageByEmail(req.user!, appType, emailImageId);
+                    setSuccessResponse(accountInfo, res);
+                } else {
+                    res.status(400).json({ message: "Your request was invalid. You must pass in an appType and either accountId or ein or ssn in the querystring." });
+                }
+            }
+        } catch (error) {
+            logger.error(error);
+            setErrorResponse(res, error);
+        }
+    }
     /**
      * Takes a spefic action for the submitted account
      * @param req, res

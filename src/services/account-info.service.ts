@@ -151,6 +151,32 @@ export class AccountInfoService implements IAccountInfoService {
     }
   }
 
+  public async downloadImageByEmail<T extends AccountActivity>(user: User, appType: string, emailImageId: number | null): Promise<T[]> {
+    const cobDataResolver = new CobDataResolverService<T>(user);
+    let reqURL = '';
+    if (appType === 'MRP') {
+      reqURL = `/api/v1/correspondences/downloads3email?emailImageId=${emailImageId}&systemIndicator=M`
+    } else {
+      reqURL = `/api/v1/correspondences/downloads3email?emailImageId=${emailImageId}`
+    }
+    try {
+      //call endpoint
+      const response = await cobDataResolver.getDataArray(reqURL);
+
+      //handle response
+      if (!response) {
+        return Promise.reject({
+          status: 200,
+          error: 'downloadImageByEmail: Unknown error'
+        });
+      }
+      return Promise.resolve(response as T[]);
+
+    } catch (error) {
+      return Promise.reject({ status: 500, error: error });
+    }
+  }
+
   public async submitAction(user: User, appType: AppType, acctInfo: AccountInfo): Promise<AccountInfo> {
     let action: string = '';
     let accountId = acctInfo.contactInfo.accountId;

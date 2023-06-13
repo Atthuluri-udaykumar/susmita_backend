@@ -229,4 +229,8 @@ export class AccountInfoMockService implements IAccountInfoService {
   emailNotification(user: User, accountId: number | null, emailFrom: string | null, emailTo: string | null): Promise<[]> {
     return Promise.resolve([]);
   }
+
+  downloadImageByEmail(user: User, appType: string, emailImageId: number | null): Promise<[]> {
+    return Promise.resolve([]);
+  }
 }

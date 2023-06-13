@@ -12,4 +12,5 @@ export interface IAccountInfoService {
     fetchPartiesData<T extends AccountActivity>(user: User, accountId: number | null): Promise<T[]>;
     submitAction(user: User, appType: AppType, submitterAction: AccountInfo): Promise<AccountInfo>;
     emailNotification<T extends AccountActivity>(user: User, accountId: number | null, emailFrom: string | null, emailTo: string | null): Promise<T[]>;
+    downloadImageByEmail<T extends AccountActivity>(user: User, appType: string | null, emailImageId: number | null): Promise<T[]>;
 }
