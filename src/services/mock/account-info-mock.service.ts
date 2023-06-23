@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { IAccountInfoService } from '../interfaces/account-info-service.interface';
 import { AccountInfo } from '../../models/account-info.model';
 import { User } from '../../types/custom';
-import { AccountActivity } from '../../models/account-activity.model';
+import { AccountActivity, ContractorData } from '../../models/account-activity.model';
 import { AppType } from '../../models/apptypes.model';
 
 @injectable()
@@ -233,4 +233,9 @@ export class AccountInfoMockService implements IAccountInfoService {
   downloadImageByEmail(user: User, appType: string, emailImageId: number | null): Promise<[]> {
     return Promise.resolve([]);
   }
+
+  getContractorData(user: User, contractorData: ContractorData): Promise<[]> {
+    return Promise.resolve([])
+  }
+
 }

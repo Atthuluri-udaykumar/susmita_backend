@@ -6,7 +6,7 @@ import { User } from '../types/custom';
 import { MirPrsn } from '../models/mir-prsn.model';
 import { CobDataResolverService } from './cob-data-resolver-service';
 import { MraDataResolverService } from './mra-data-resolver-service';
-import { AccountActivity, EdiAccountActivity } from '../models/account-activity.model';
+import { AccountActivity, ContractorData, EdiAccountActivity } from '../models/account-activity.model';
 import { ServiceResponse } from '../models/serviceresponse.model';
 import { isEmptyObject } from '../utils/model.util';
 import { DataFormatUtils } from '../utils/data-format.utils';
@@ -540,6 +540,25 @@ export class AccountInfoService implements IAccountInfoService {
     acctInfo.contactInfo.pinStatus = Submitter.getPinStatus((appType == AppType.GHPRP) ? response.sbmtrStatus : response.status);
 
     return acctInfo;
+  }
+
+  private async getContractorData(user: User, contractorData: ContractorData): Promise<any> {
+    const cobDataResolver = new CobDataResolverService<Submitter>(user);
+    let reqURL = ""
+    try {
+      //call endpoint
+      const contractorRes: any = await cobDataResolver.postData(reqURL, contractorData);
+      //handle response
+      if (!contractorRes) {
+        return Promise.reject({
+          status: 200,
+          error: 'getContractorData: Unknown error'
+        });
+      }
+      return Promise.resolve(contractorRes);
+    } catch (error) {
+      return Promise.reject({ status: 500, error: error });
+    }
   }
 
 }

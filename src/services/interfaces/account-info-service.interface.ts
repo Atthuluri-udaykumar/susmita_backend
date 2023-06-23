@@ -1,4 +1,4 @@
-import { AccountActivity } from "../../models/account-activity.model";
+import { AccountActivity, ContractorData } from "../../models/account-activity.model";
 import { AccountInfo } from "../../models/account-info.model";
 import { AppType } from "../../models/apptypes.model";
 import { User } from "../../types/custom";
@@ -13,4 +13,5 @@ export interface IAccountInfoService {
     submitAction(user: User, appType: AppType, submitterAction: AccountInfo): Promise<AccountInfo>;
     emailNotification<T extends AccountActivity>(user: User, accountId: number | null, emailFrom: string | null, emailTo: string | null): Promise<T[]>;
     downloadImageByEmail<T extends AccountActivity>(user: User, appType: string | null, emailImageId: number | null): Promise<T[]>;
+    getContractorData(user: User, contractorData: ContractorData): Promise<any>;
 }

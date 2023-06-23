@@ -26,6 +26,8 @@ export class AccountInfoRouter implements CustomRouter {
             [jwtValidator], this.controller.submitAction.bind(this.controller));
         this.router.get('/downloadImageByEmail',
             [jwtValidator], this.controller.downloadImageByEmail.bind(this.controller));
+        this.router.get('/getContractorData',
+            [jwtValidator], this.controller.getContractorData.bind(this.controller));
     }
 
 }

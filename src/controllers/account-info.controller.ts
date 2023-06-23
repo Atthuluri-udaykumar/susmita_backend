@@ -74,6 +74,18 @@ export class AccountInfoController extends AbstractController {
             setErrorResponse(res, error);
         }
     }
+
+    public async getContractorData(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const reqBody = req.body
+        try {
+            const resData = await this.service.getContractorData(req.user!, reqBody);
+            setSuccessResponse(resData, res);
+
+        } catch (error) {
+            logger.error(error);
+            setErrorResponse(res, error);
+        }
+    }
     /**
      * Takes a spefic action for the submitted account
      * @param req, res
