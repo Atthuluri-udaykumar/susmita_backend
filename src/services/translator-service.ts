@@ -7,6 +7,9 @@
 import { injectable } from 'inversify';
 import { EdiMessage } from '../models/edi-message.model';
 import { MirEdiCntntTbl } from '../models/miredicntnttbl.model';
+import { AxiosResponse } from 'axios';
+import { ServiceResponse } from '../models/serviceresponse.model';
+import { EdiSession } from '../models/edi-session.model';
 
 
 /**
@@ -14,6 +17,13 @@ import { MirEdiCntntTbl } from '../models/miredicntnttbl.model';
  */
 @injectable()
 export class TranslatorService {
+
+    public static translateToEdiSession(resp: any) {
+        const result: EdiSession = new EdiSession();
+        result.refreshToken = resp.sessionId ??= "";
+        result.role = resp.roleId ??= 0;
+        return result;
+    }
 
     public static translateToMirEdiCntntTbl( ediMessage: EdiMessage ) {
         const result: MirEdiCntntTbl = new MirEdiCntntTbl();

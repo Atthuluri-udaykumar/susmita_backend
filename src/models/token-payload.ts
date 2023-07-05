@@ -14,7 +14,8 @@ export class TokenPayload  {
       badPasswordTime: 0,
       lockoutTime: 0,
       pwdLastSet: 0,
-      memberOf: []
+      memberOf: [], 
+      roleId: 0
     };
   }
 

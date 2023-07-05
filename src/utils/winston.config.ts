@@ -1,8 +1,8 @@
-import httpContext from 'express-http-context';
 import winston, { format } from 'winston';
 import { ConsoleTransportOptions, FileTransportOptions } from 'winston/lib/winston/transports';
 import { rootDir, contextPath } from './app.config';
 import expressWinston from 'express-winston';
+import { getTransactionId } from '../middleware/transaction-id';
 // import DailyRotateFile, { DailyRotateFileTransportOptions } from 'winston-daily-rotate-file';
 
 const fileOptions: FileTransportOptions = {
@@ -42,7 +42,7 @@ const logger = winston.createLogger({
   format: format.combine(
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
     format.printf((info) => {
-      const trace = httpContext.get('traceId');
+      const trace = getTransactionId();
       let logFormat = `${info.timestamp} ${info.level} [${appName}, ${trace}] ${JSON.stringify(info.message)}`;
       if (info.meta) {
         logFormat = `${info.timestamp} ${info.level} [${appName}, ${trace}] org.zalando.logbook.Logbook ${JSON.stringify(info.meta)}`;

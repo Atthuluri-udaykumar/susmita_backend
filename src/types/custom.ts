@@ -11,4 +11,5 @@ export type User = {
     lockoutTime: number;
     pwdLastSet: number;
     memberOf: []|undefined;
+    roleId: number;
 }

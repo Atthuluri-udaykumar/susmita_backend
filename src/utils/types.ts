@@ -21,6 +21,16 @@ const Symbols = {
     
     IAccountInfoController: Symbol.for('IAccountInfoController'),
     IAccountInfoService: Symbol.for('IAccountInfoService'),
+    IRemoveAccountService: Symbol.for('IRemoveAccountService'),
+
+    IEcrsController: Symbol.for('IEcrsController'),
+    IEcrsService: Symbol.for('IEcrsService'),
+
+
+    ISessionService: Symbol.for('ISessionService'),
+    ISessionRepository: Symbol.for('ISessionRespoitory'),
+
+
 };
 
 export { Symbols };

@@ -1,10 +1,12 @@
 export class TaskResponse {
+  trackingId: string;
   status = 200;
   errors: any[];
   result: any | undefined;
 
-  constructor() {
+  constructor(trackingId?: any) {
     this.errors = [];
+    this.trackingId = trackingId? trackingId: '';
   }
 
   processingSuccess(): boolean {

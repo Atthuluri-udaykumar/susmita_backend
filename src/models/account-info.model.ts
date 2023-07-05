@@ -1,4 +1,6 @@
+import { MirPrsn } from './mir-prsn.model';
 import { Submitter } from './submitter.model';
+import { ConditionalTaskProcessingStatus } from './task/conditional-task.model';
 
 class Address {
   public streetLine1: string = '';
@@ -56,6 +58,7 @@ class DisplayInfo {
 class ActionInfo {
   public status: number = 200; 
   public errors: any[] = [];
+  public txnLogs: any[] = [];
   public actionViewAccountActvity: boolean = false;
   public actionResendProfileReport: boolean = false;
   public actionRemoveSubmitter: boolean = false;
@@ -78,3 +81,31 @@ export class AccountInfo {
   public displayInfo: DisplayInfo = new DisplayInfo();
   public actionInfo: ActionInfo = new ActionInfo();
 }
+
+export interface AccountPersonRolesInfo { 
+  acctId: number;
+  aplctnName: string;
+  associatedPersons: PersonRolesInfo[];
+}
+export interface PersonRolesInfo { 
+  prsnId: number;
+  deleteMrpRole?: boolean;
+  deleteWcsRole?: boolean;
+  deleteGhprpRole?: boolean;
+  mrpAR?: boolean;
+  ghprpAR?: boolean;
+  wcsAR?: boolean;
+  mraAR?: boolean;
+  noPrsnAcctMra?: boolean;
+  noPrsnAcctMrp?: boolean;
+  noPrsnAcctWcs?: boolean;
+  noPrsnAcctGhprp?: boolean;
+  prsnInfo: MirPrsn;
+}
+
+export interface PersonRolesActionStatusDetails { 
+  prsnId: number;
+  taskActionStatuses: ConditionalTaskProcessingStatus[];
+}
+
+

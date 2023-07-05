@@ -7,6 +7,7 @@ import { Response } from 'express';
 import { EdiResponse } from '../models/edi-respose.model';
 
 import { logger } from './winston.config';
+import { getTransactionId } from '../middleware/transaction-id';
 
 /**
  * EDIResponse Controller
@@ -38,6 +39,7 @@ import { logger } from './winston.config';
             response.errors = errors;
         }
         response.timestamp = new Date();
+        response.traceId = getTransactionId();
         return response;
     }
 

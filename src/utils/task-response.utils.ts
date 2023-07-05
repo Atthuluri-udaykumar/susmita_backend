@@ -7,16 +7,13 @@ export class TaskResponseUtils {
       taskResponse.result = rsp.value;
     } else {
       taskResponse.status = rsp.reason['status'];
-      taskResponse.errors.push(rsp.reason['nessage']);
+      taskResponse.errors.push(rsp.reason['message']);
     }
 
     return taskResponse;
   }
 
-  static handleValidDataResponse(
-    response: any,
-    message: string = '',
-  ): TaskResponse {
+  static handleValidDataResponse(response: any, message: string = ''): TaskResponse {
     const taskResponse: TaskResponse = new TaskResponse();
     if (response) {
       taskResponse.result = response;
@@ -28,12 +25,67 @@ export class TaskResponseUtils {
     return taskResponse;
   }
 
+  static handleValidDataResponseV2(trackingId: any, response: any, message: string = ''): TaskResponse {
+    const taskResponse: TaskResponse = new TaskResponse(trackingId);
+    if (response) {
+      taskResponse.result = response;
+    } else {
+      taskResponse.result = null;
+      taskResponse.errors.push(message);
+    }
+
+    return taskResponse;
+  }
+
   /*
+    Merge objects inside array of V[] using the merge-key provided
+    Uses Array.reduce
+  */
+  static mergeResponses<V extends Record<string, any>>(mergeKey: string, responses: V[][]) : V[] {
+      if(responses && Array.isArray(responses) && responses.length >0){
+        if(responses.length > 1){
+          //STEP-1: Reduce multiple arrays into a single array
+          let allResponses = responses.reduce((rspArr1, rspArr2) => rspArr1.concat(rspArr2));
+
+          //STEP-2: Reduce array by merging objects with the same merge-key value
+          if(allResponses){
+            const mergeKeyRspMap =   allResponses.reduce((accumulator, currResponse) => {
+              if (accumulator[currResponse[mergeKey]]) {
+                accumulator[currResponse[mergeKey]] = {...accumulator[currResponse[mergeKey]], ...currResponse};
+              } else {
+                accumulator[currResponse[mergeKey]] = currResponse;
+              }
+              return accumulator;
+            }, {} as {[key: string]: V});
+
+            //console.log({'Merge-Map=2': JSON.stringify(mergeKeyRspMap)});
+            return Object.values(mergeKeyRspMap);  
+          }
+        } else if(responses.length === 1){
+          const mergeKeyRspMap =   responses.at(0)?.reduce((accumulator, currResponse) => {
+            if (accumulator[currResponse[mergeKey]]) {
+              accumulator[currResponse[mergeKey]] = {...accumulator[currResponse[mergeKey]], ...currResponse};
+            } else {
+              accumulator[currResponse[mergeKey]] = currResponse;
+            }
+            return accumulator;
+          }, {} as {[key: string]: V});
+
+          //console.log({'Merge-Map=1': JSON.stringify(mergeKeyRspMap)});
+          //return Object.values(mergeKeyRspMap); 
+        }
+        
+        return responses.at(0) as V[];
+      }
+      return [];
+    }
+
+
+  /* ------------------- OLD Array of Array merge logic[start]---------------------
     Merge 2 arrays of Objects of type V using the supplied merge-key.
     If a match is found in the 2nd array for the merge-key, and if they share any property then the property value 
     of the object from 2nd array will overwrite the existing value in the object from 1st array.
     Refer to Merge using spread operator
-  */
   static merge2Responses<V extends Record<string, any>>(mergeKey: string, response1: V[], response2: V[]) : V[] {
     if( !response1 && !response2) {
       return [];
@@ -49,10 +101,8 @@ export class TaskResponseUtils {
     }
   }
 
-  /*
-    There has to be better way than using a for-loop! But, given the time crunch, this is what i got.
-  */
-  static mergeResponses<V extends Record<string, any>>(mergeKey: string, responses: V[][]) : V[] {
+  //There has to be better way than using a for-loop! But, given the time crunch, this is what i got.
+  static mergeResponsesV0<V extends Record<string, any>>(mergeKey: string, responses: V[][]) : V[] {
     if(responses && Array.isArray(responses) && responses.length >0){
       if(responses.length > 2){
         let merged: V[] = TaskResponseUtils.merge2Responses(mergeKey, responses.at(0) as V[], responses.at(1) as V[]);
@@ -67,62 +117,5 @@ export class TaskResponseUtils {
     }
     return [];
   }
-
-  /*
-   static async fetchTaskData(taskList: TaskList): Promise<TaskResponse> {
-    let response = new TaskResponse();
-    try {
-      const rspData = await taskList.mainTask.srvc.getDataArray(
-        taskList.mainTask.url,
-      );
-
-      //console.log(rspData);
-      if (rspData) {
-        if (rspData.length === 0) {
-          //response.errors.push('Key not found');
-          taskList.mainTask.response =
-            TaskHandlerV0Service.handleValidDataResponse(null, 'Key not found');
-        } else if (rspData.length > 1) {
-          //response.errors.push('Key Not Unique');
-          taskList.mainTask.response =
-            TaskHandlerV0Service.handleValidDataResponse(null, 'Key Not Unique');
-        } else {
-          taskList.mainTask.response =
-            TaskHandlerV0Service.handleValidDataResponse(rspData);
-          const subTaskPromises: Promise<any>[] = [];
-          TaskHandlerV0Service.replaceUrlParams(
-            taskList.subTasks,
-            rspData[0],
-          ).forEach((url, idx) => {
-            taskList.subTasks[idx].url = url;
-            subTaskPromises.push(taskList.subTasks[idx].srvc.getDataArray(url));
-          });
-
-          if (subTaskPromises && subTaskPromises.length > 0) {
-            const rspList = await Promise.allSettled(subTaskPromises);
-            if (rspList) {
-              rspList.forEach((rsp, idx) => {
-                taskList.subTasks[idx].response =
-                  TaskHandlerV0Service.handleSettledResponse(rsp);
-              });
-            }
-          }
-
-          //console.log(taskList);
-        }
-      } else {
-        response.status = 500;
-        response.errors = rspData.errors;
-        return Promise.reject(response);
-      }
-
-      response = TaskHandlerV0Service.handleValidDataResponse(taskList);
-      return Promise.resolve(response);
-    } catch (error: any) {
-      response.status = 500;
-      response.errors.push((error.message ??= 'Unknown error message'));
-      //error.message ??= 'Unknown error message';
-      return Promise.reject(response);
-    }
-  }*/
+   ------------------- OLD logic[end]--------------------- */
 }

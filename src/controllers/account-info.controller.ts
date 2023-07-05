@@ -9,7 +9,7 @@ import { IAccountInfoService } from '../services/interfaces/account-info-service
 import { AccountInfo } from '../models/account-info.model';
 import { EdiAccountActivity, GhprpAccountActivity } from '../models/account-activity.model';
 import { AppType } from '../models/apptypes.model';
-import { toDate } from '../utils/datetime.util';
+import { fromISO_YYYYMMDD, fromLocal_MMddyyyy } from '../utils/datetime.util';
 /**
  * Account Info Controller
  */
@@ -26,7 +26,7 @@ export class AccountInfoController extends AbstractController {
      */
     @loggable(false, false)
     public async findAccountByEinAccountIdSsn(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const appType = AppType.valueOf(req.query.appType);
+        const appType = AppType.valueOf(req.query.appType); 
         const accountId = req.query.accountId;
         const ein = req.query.ein;
         const ssn = req.query.ssn;
@@ -49,24 +49,25 @@ export class AccountInfoController extends AbstractController {
                 }
             }
         } catch (error) {
-            logger.error(error);
+            logger.error( error);
             setErrorResponse(res, error);
         }
     }
 
-
-    public async downloadImageByEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+    //Returns a PDF bytestream as a Base64 encodeded string
+    @loggable(false, false)
+    public async downloadEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
         const appType: any = AppType.valueOf(req.query.appType);
-        const emailImageId = req.query.emailImageId;
+        const emailImageId:any = req.query.imageId as string;
         try {
             if (!appType) {
-                res.status(400).json({ message: "Your request was invalid. You must pass in an appType and either accountId or ein or ssn in the querystring." });
+                res.status(400).json({ message: "Your request was invalid. You must pass in an appType and imageId in the querystring." });
             } else {
                 if (emailImageId) {
-                    const accountInfo = await this.service.downloadImageByEmail(req.user!, appType, emailImageId);
-                    setSuccessResponse(accountInfo, res);
+                    const base64ByteStream = await this.service.downloadEmail(req.user!, appType, emailImageId);
+                    setSuccessResponse(base64ByteStream, res);
                 } else {
-                    res.status(400).json({ message: "Your request was invalid. You must pass in an appType and either accountId or ein or ssn in the querystring." });
+                    res.status(400).json({ message: "Your request was invalid. You must pass in an appType and imageId in the querystring." });
                 }
             }
         } catch (error) {
@@ -75,23 +76,13 @@ export class AccountInfoController extends AbstractController {
         }
     }
 
-    public async getContractorData(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const reqBody = req.body
-        try {
-            const resData = await this.service.getContractorData(req.user!, reqBody);
-            setSuccessResponse(resData, res);
-
-        } catch (error) {
-            logger.error(error);
-            setErrorResponse(res, error);
-        }
-    }
+   
     /**
      * Takes a spefic action for the submitted account
      * @param req, res
      * @return exists response's code status and body
      */
-    @loggable(false, false)
+  @loggable(false, false)
     public async submitAction(req: Request, res: Response, next: NextFunction): Promise<void> {
 
         try {
@@ -99,41 +90,53 @@ export class AccountInfoController extends AbstractController {
 
             const appType = AppType.valueOf(req.query.appType);
             const accountInfo = req.body as AccountInfo;
-
+            
             if (appType && accountInfo?.actionInfo) {
                 const accountId = accountInfo.contactInfo.accountId;
 
                 if (accountInfo.actionInfo.actionViewAccountActvity) {
-                    const activity = (appType == AppType.GHPRP) ?
-                        await this.service.fetchAccountActivity<GhprpAccountActivity>(req.user!, appType, accountId)
-                        : await this.service.fetchAccountActivity<EdiAccountActivity>(req.user!, appType, accountId);
-
-                    if (appType !== AppType.GHPRP) {
+                    const activity = (appType == AppType.GHPRP) ? 
+                                     await this.service.fetchAccountActivity<GhprpAccountActivity>(req.user!, appType, accountId)
+                                     : await this.service.fetchAccountActivity<EdiAccountActivity>(req.user!, appType, accountId);
+                    
+                    if(appType !== AppType.GHPRP){
                         (activity as EdiAccountActivity[]).forEach((actvty) => {
-                            actvty.activityDt = actvty.activityDt ? toDate(actvty.activityDt) : '';
+                            actvty.activityDt = actvty.activityDt? fromISO_YYYYMMDD(actvty.activityDt): '';
                         });
-                    }
-                    setSuccessResponse(activity, res);
-                } else if (accountInfo.actionInfo.actionGrantFullFunctions
-                    || accountInfo.actionInfo.actionUnlockPin
-                    || accountInfo.actionInfo.actionResetPin
+                    }                                     
+                    return setSuccessResponse(activity, res);
+                } else if (accountInfo.actionInfo.actionGrantFullFunctions 
+                            || accountInfo.actionInfo.actionUnlockPin
+                            || accountInfo.actionInfo.actionResetPin
+                            || accountInfo.actionInfo.actionVetSubmitter
+                            || accountInfo.actionInfo.actionRemoveSubmitter
                 ) {
-                    const updateResult = await this.service.submitAction(req.user!, appType, accountInfo);
-                    setSuccessResponse(updateResult, res);
+                    const updateResult =  await this.service.submitAction(req.user!, appType, accountInfo); 
+                    return setSuccessResponse(updateResult, res);
                 } else if (accountInfo.actionInfo.actionGoPaperlessParties) {
                     const partiesData = await this.service.fetchPartiesData<any>(req.user!, accountId)
-                    setSuccessResponse(partiesData, res)
+                    return setSuccessResponse(partiesData, res)
                 } else if (accountInfo.actionInfo.actionPaperlessEmails) {
-                    const emailNotifications = await this.service.emailNotification<any>(req.user!, accountId, req.emailFrom!, req.emailTo!);
-                    setSuccessResponse(emailNotifications, res)
+                    const emailFrom = req.query.emailFrom as string;
+                    const emailTo = req.query.emailTo as string;
+                    if(!emailFrom || !emailTo){
+                        return setErrorResponse(res, "Bad Request", 400, "Your request was invalid. You must pass in emailFrom and emailTo params also as part of your request." );  
+                    }
+                    const emailNotifications = await this.service.emailNotification<any>(req.user!, accountId, 
+                                                                                        fromLocal_MMddyyyy(emailFrom) , 
+                                                                                        fromLocal_MMddyyyy(emailTo));
+                    return setSuccessResponse(emailNotifications, res)
                 }
             } else {
-                res.status(400).json({ message: "Your request was invalid. You must pass in AppType param and valid Account info with selected action in request-body." });
+                return setErrorResponse(res, "Bad Request", 400, "Your request was invalid. You must pass in AppType param and valid Account info with selected action in request-body." );
             }
         } catch (error) {
             logger.error(error);
-            setErrorResponse(res, error);
+            return setErrorResponse(res, error);
         }
-    }
+
+        return setErrorResponse(res, "Bad Request", 400, "Your request was invalid" );
+       
+    }    
 
 }

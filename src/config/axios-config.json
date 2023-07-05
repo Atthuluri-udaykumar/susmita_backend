@@ -12,13 +12,13 @@
             "headers": { "x-api-key": "local" }
         },
         "imp":{
-            "baseURL": "", 
-            "timeout": 1000,  
+            "baseURL": "http://isc-d-alb-xx.imp.mspsc.local:8080/", 
+            "timeout": 2000,  
             "headers": { "x-api-key": "local" }
         },
         "pro":{
-            "baseURL": "", 
-            "timeout": 1000,  
+            "baseURL": "http://psc-d-alb-xx.pro.mspsc.local:8080/", 
+            "timeout": 2000, 
             "headers": { "x-api-key": "local" }
         }
     }

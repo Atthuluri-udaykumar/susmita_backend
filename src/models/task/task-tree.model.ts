@@ -102,6 +102,6 @@ export class TaskTree<T extends Task> {
           await node.preProcess()
         ).process()
       ).postProcess()
-      );
+    );
   }
 }

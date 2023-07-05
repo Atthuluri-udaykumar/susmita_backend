@@ -35,7 +35,7 @@ export const jwtTypeValidator = (req: Request, res: Response, next: NextFunction
         next();
     } catch (err) {
         if( err instanceof TokenExpiredError) {
-            return res.sendStatus(401);
+            return res.status(401).send("Unauthorized: token expired");
         } else if ( err instanceof TokenMissingError ) {
             return res.sendStatus(401);
         } else if( err instanceof TokenTypeError ) {
@@ -46,7 +46,28 @@ export const jwtTypeValidator = (req: Request, res: Response, next: NextFunction
     }
 };
 
+/**
+ * Decode the user object from jwt payload
+ */
+export function jwtDecodeUserName(req: Request) : string {
+    const token = jwtGetToken(req);
 
+    if (!token || token == "") {
+        return "edi-gw";
+    }
+    try {
+        let decoded = verify( token, jwtKey );
+
+        const payload = new TokenPayload();
+        Object.assign( payload, decoded);
+
+        return payload.user.userName;
+
+    } catch (err) {
+        return "edi-gw";
+    }
+
+}
 
 /**
     returns token payload
@@ -64,12 +85,12 @@ export function authenticateJwtToken (req: Request, tokenType: string): TokenPay
         throw new TokenMissingError( "missing token");
     }
 
-    console.debug(token);
+    // console.debug(token);
 
     try {
         let decoded = verify( token, jwtKey );
 
-        console.debug(decoded);
+        // console.debug(decoded);
         const payload = new TokenPayload();
         Object.assign( payload, decoded);
 

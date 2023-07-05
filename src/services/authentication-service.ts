@@ -43,7 +43,8 @@ export class AuthenticationService implements IAuthenticationService {
             badPasswordTime: login.badPasswordTime,
             lockoutTime: login.lockoutTime,
             pwdLastSet: login.pwdLastSet,
-            memberOf: login.memberOf
+            memberOf: login.memberOf,
+            roleId: 0
           };
           console.log('user logged in: ' +  JSON.stringify(user));
           return Promise.resolve(user);

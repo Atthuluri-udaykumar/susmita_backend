@@ -12,6 +12,9 @@ import { Symbols } from '../utils/types';
 import { AbstractController } from './abstract-controller';
 import { IAuthenticationController } from './interfaces/authentication-controller.interface';
 import { ServiceResponse } from '../models/serviceresponse.model';
+import { ISessionService } from '../services/interfaces/session-service.interface';
+import { EdiSession } from '../models/edi-session.model';
+import { setCurrentUser } from '../middleware/current-user';
 
 /**
  * AuthenticationController Controller
@@ -19,7 +22,8 @@ import { ServiceResponse } from '../models/serviceresponse.model';
 @injectable()
 export class AuthenticationController extends AbstractController implements IAuthenticationController {
 
-    constructor(@inject(Symbols.IAuthenticationService)  private service: IAuthenticationService) {
+    constructor(@inject(Symbols.IAuthenticationService)  private service: IAuthenticationService,
+        @inject(Symbols.ISessionService)  private sessionService: ISessionService) {
         super();
     }
     
@@ -29,7 +33,9 @@ export class AuthenticationController extends AbstractController implements IAut
         try {
             // authenticate the user, then return the jwt
             const user = await this.service.authenticateUser(req.body.username, req.body.password);
-            return setSuccessResponse( createTokensForUser( user), res);
+            const reply = createTokensForUser( user);
+            this.prepareUserSession(reply);
+            return setSuccessResponse( reply, res);
             
         } catch (error) {
             logger.error(error);
@@ -65,4 +71,24 @@ export class AuthenticationController extends AbstractController implements IAut
             return setErrorResponse(res, error);
         }
     }
+
+    public async prepareUserSession( reply : any) {
+        let session: EdiSession = new EdiSession();
+        setCurrentUser(reply.user.userName);
+        session.refreshToken = reply.refreshToken;
+        session.role = this.getUserRole(reply)
+        await this.sessionService.updateSession(session);
+    }
+
+    getUserRole(reply: any): number {
+        const memberOf: string[] = reply.user.memberOf ??= [];
+        memberOf.forEach((element) => {
+            if( element.toString().toLowerCase().search("dc=bbadmin")>=0) {
+                return 1;
+            }
+        });
+        return 0;
+    
+    }
 }
+

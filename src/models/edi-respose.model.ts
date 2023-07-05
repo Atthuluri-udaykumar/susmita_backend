@@ -15,4 +15,7 @@ export class EdiResponse {
   @JsonProperty('timestamp', Any)
   public timestamp: any = undefined;
 
+  @JsonProperty('x-b3-traceid', Any)
+  public traceId: any = undefined;
+
   }

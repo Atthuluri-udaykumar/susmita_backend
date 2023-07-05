@@ -8,5 +8,5 @@ export class Login {
     public lastLogonTimestamp: number = 0;
     public pwdLastSet: number = 0;
     public memberOf: [] = [];
-
+    public roleId: number = 0;
 }

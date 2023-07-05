@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { activeConfig } from "./axios.config";
 import { ServiceResponse } from "../models/serviceresponse.model";
+import { getTransactionId } from "../middleware/transaction-id";
 
 enum StatusCode {
     Unauthorized = 401,
@@ -27,6 +28,13 @@ class Http {
         }
       );
   
+      foo.interceptors.request.use( (request) => {
+        // add trace id to requests
+        request.headers['x-b3-traceid'] =  getTransactionId();
+        return request;
+        }
+      );
+
       this.instance = foo;
       return foo;
     }
@@ -55,8 +63,24 @@ class Http {
       return this.http.put<T, R>(url, data, config);
     }
   
-    delete<T = any, R = AxiosResponse<T>>(url: string, config?: AxiosRequestConfig): Promise<R> {
-      return this.http.delete<T, R>(url, config);
+    delete<D = any, T = D, R = AxiosResponse<T>>(
+      url: string, 
+      data?: D, 
+      config?: AxiosRequestConfig
+    ): Promise<R> {
+
+      let deleteConfig: any = config;
+      if(data) {
+        if(!config) {
+          const headers = { 'Content-Type': 'application/json'};
+          deleteConfig = { headers: headers,
+            data: data
+          };
+        } else {
+          deleteConfig.data = data;
+        }
+      }      
+      return this.http.delete<T, R>(url, deleteConfig);
     }
   
     // Handle global app errors

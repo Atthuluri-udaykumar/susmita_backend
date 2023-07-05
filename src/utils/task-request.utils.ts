@@ -88,45 +88,127 @@ export class TaskRequestUtils {
       //console.log({'loc': 'processTaskRequest', 'request': request.url});
       if (request.isValid()) {
         let response: any = null;
-        if (request.method === 'POST') {
-          response = await dataResolver.postData(
-            request.url,
-            request.body,
-          );
-        } else {
-          //fallback is GET
-          response = await dataResolver.getDataArray(
-            request.url,
-          );
+        if (request.method === 'PUT') {
+          response = await dataResolver.putData(request.url, request.body);
+        } else if (request.method === 'POST') {
+          response = await dataResolver.postData(request.url,request.body);
+        } else if (request.method === 'DELETE') {
+          response = await dataResolver.deleteData(request.url, request.body);
+        } else { //fallback is GET
+          response = await dataResolver.getDataArray(request.url);
         }
 
-        if (response && Array.isArray(response)) {
-          if (!allowMany && response.length > 1) {//multiple records fetched but expecting just one
-            taskResponse = TaskResponseUtils.handleValidDataResponse(
+        if (request.method === 'GET') {
+          if (response && Array.isArray(response)) {
+            if (!allowMany && response.length > 1) {//multiple records fetched but expecting just one
+              taskResponse = TaskResponseUtils.handleValidDataResponse(
+                  null,
+                  'Key Not Unique',
+                );
+            } else if (response.length === 0) {
+              taskResponse = TaskResponseUtils.handleValidDataResponse(
                 null,
-                'Key Not Unique',
+                'Key not found',
               );
-          } else if (response.length === 0) {
+            } else {
+              taskResponse = TaskResponseUtils.handleValidDataResponse(response);
+            }
+
+          } else {
             taskResponse = TaskResponseUtils.handleValidDataResponse(
               null,
-              'Key not found',
+              'Response not recognized',
+            );
+          }
+
+        } else { //POST, PUT, DELETE
+          if (!response || (response && response.rowsAffected < 1)) {
+            taskResponse = TaskResponseUtils.handleValidDataResponse(
+              null,
+              'No rows affected',
             );
           } else {
             taskResponse = TaskResponseUtils.handleValidDataResponse(response);
           }
-
-          return Promise.resolve(taskResponse);
-        } else {
-          taskResponse.status = 500;
-          return Promise.resolve(taskResponse);
         }
       }
 
-      return Promise.resolve(taskResponse);
     } catch (error: any) {
-      taskResponse.status = 500;
-      taskResponse.errors.push((error.message ??= 'Unknown error message'));
-      return Promise.resolve(taskResponse);
+      taskResponse = TaskResponseUtils.handleValidDataResponse(
+        null,
+        error.message ??= 'Unknown error message',
+      );
     }
+    
+    return Promise.resolve(taskResponse);
+  }
+
+  
+  /*
+    Used for tracking and processing a single request from multi-request processing queue
+  */
+  static async processConditionalTaskRequest(trackingId: any, 
+                                            request: TaskRequest, 
+                                            dataResolver: any, 
+                                            allowMany: boolean): Promise<TaskResponse>{
+    let taskResponse: TaskResponse = new TaskResponse(trackingId);
+    try {
+      //console.log({'loc': 'processConditionalTaskRequest', 'request': request.url});
+      if (request.isValid()) {
+        let response: any = null;
+
+        if (request.method === 'PUT') {
+          response = await dataResolver.putData(request.url, request.body);
+        } else if (request.method === 'POST') {
+          response = await dataResolver.postData(request.url,request.body);
+        } else if (request.method === 'DELETE') {
+          response = await dataResolver.deleteData(request.url, request.body);
+        } else { //fallback is GET
+          response = await dataResolver.getDataArray(request.url);
+        }
+
+        if (request.method === 'GET') {
+          if (response && Array.isArray(response)) {
+            if (!allowMany && response.length > 1) {//multiple records fetched but expecting just one
+              taskResponse = TaskResponseUtils.handleValidDataResponseV2(trackingId,
+                  null,
+                  'Key Not Unique',
+                );
+            } else if (response.length === 0) {
+              taskResponse = TaskResponseUtils.handleValidDataResponseV2(trackingId,
+                null,
+                'Key not found',
+              );
+            } else {
+              taskResponse = TaskResponseUtils.handleValidDataResponseV2(trackingId, response);
+            }
+          } else {
+            taskResponse = TaskResponseUtils.handleValidDataResponseV2(trackingId,
+              null,
+              'Response not recognized',
+            );
+          }
+
+        } else { //POST, PUT, DELETE
+          if (!response || (response && response.rowsAffected < 1)) {
+            taskResponse = TaskResponseUtils.handleValidDataResponseV2(trackingId,
+              null,
+              'No rows affected',
+            );
+          } else {
+            taskResponse = TaskResponseUtils.handleValidDataResponseV2(trackingId, response);
+          }
+        }      
+      
+      }
+
+    } catch (error: any) {
+      taskResponse = TaskResponseUtils.handleValidDataResponseV2(trackingId,
+        null,
+        error.message ??= 'Unknown error message',
+      );
+    }
+    
+    return Promise.resolve(taskResponse);
   }
 }

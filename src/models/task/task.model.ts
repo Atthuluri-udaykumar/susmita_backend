@@ -3,7 +3,12 @@ import { TaskRequest } from "./task-request.model";
 import { TaskResponse } from "./task-response.model";
 import { ReplaceResponseType, TaskRequestUtils } from "../../utils/task-request.utils";
 import * as _ from "lodash"
+import { TaskResponseUtils } from "../../utils/task-response.utils";
 
+interface IRequestRecord {
+  trackingId: any;
+  taskRequest: TaskRequest;
+}
 /*
  key: unique identifier
  request: place holder for request
@@ -19,7 +24,6 @@ export class Task implements ITask{
   dataResolver: any;
   taskResponse: TaskResponse;
   allowMany: boolean;
-
   /* MULTI-ROW Processing 
     --------------------------------
     Applies when the taskNode that this task belongs to has been configured with .processMany == true
@@ -27,13 +31,15 @@ export class Task implements ITask{
     There's a 1:1 mapping between:
        # of parent-taskNode response rows being processed [to] # of request stored here. 
   */
-  private processManyReqQ: TaskRequest[] = [];
+  protected processManyReqQ: IRequestRecord[] = [];
+  protected requestTrackerKey: string;
 
   constructor(
     key: string,
     taskRequest: TaskRequest = new TaskRequest(),
     dataResolver: any,
     allowMany = true, // set to false if expecting a single unique record
+    requestTrackerKey = ''
   ) {
       this.key = key;
       this.taskRequest = taskRequest;
@@ -41,27 +47,32 @@ export class Task implements ITask{
       this.taskResponse = new TaskResponse();
       this.allowMany = allowMany;
 
-      this.processManyReqQ = new Array<TaskRequest>();
+      this.processManyReqQ = new Array<IRequestRecord>();
+      this.requestTrackerKey = requestTrackerKey;
+  }
+
+  allowProcessingCriteria(parentData?: any): boolean {
+    return true;//DEFAULT: always process a request
   }
 
   //Replace request object with corresponding values from parent-data
   async preProcess(parentResponseData?: any, parentRequestData?: any, processMany: boolean = false): Promise<any> {
     if(parentResponseData){
       if(processMany && Array.isArray(parentResponseData)){
-        //console.log({'loc': 'preProcess-MULTI', 'request': this.taskRequest, 'processMany': processMany});
+        //console.log({'loc': `preProcess[${this.key}]-MULTI`, 'pData': parentResponseData.length, 'reqQ': this.processManyReqQ.length});
 
-        parentResponseData.forEach((pDataRec) => {
-          let reqQIdx = this.processManyReqQ.push(_.cloneDeep(this.taskRequest));
+        for(let pDataRec of parentResponseData){
+          let reqQIdx = this.processManyReqQ.push({ trackingId: pDataRec[this.requestTrackerKey], taskRequest: _.cloneDeep(this.taskRequest)});
 
           let urlResponse:ReplaceResponseType = TaskRequestUtils.replaceParams(this.taskRequest, pDataRec, false);
           //console.log({'loc': `preProcess-MULTI[${reqQIdx}]`, 'pData': pDataRec, 'replace': urlResponse, 'status': urlResponse.success});
           if(urlResponse.success){
-            this.processManyReqQ[reqQIdx-1].url = urlResponse.data;
-            //console.log({'loc': `preProcess-MULTI[${reqQIdx}]-PASS`, 'req-Q':  this.processManyReqQ[reqQIdx-1]});
+            this.processManyReqQ[reqQIdx-1].taskRequest.url = urlResponse.data;
+            //console.log({'loc': `preProcess[${this.key}]-MULTI[${reqQIdx}]-PASS`, 'reqQ': this.processManyReqQ.length, 'req-Q':  this.processManyReqQ[reqQIdx-1]});
             if(this.taskRequest.method === 'POST'){
               const bodyResponse:ReplaceResponseType = TaskRequestUtils.replaceParams(this.taskRequest, pDataRec, true);
               if(bodyResponse.success){
-                this.processManyReqQ[reqQIdx-1].body = JSON.parse(bodyResponse.data);
+                this.processManyReqQ[reqQIdx-1].taskRequest.body = JSON.parse(bodyResponse.data);
               } else {
                 this.taskResponse.status = 200;
                 this.taskResponse.errors.push(bodyResponse.error);
@@ -74,7 +85,7 @@ export class Task implements ITask{
             this.taskResponse.errors.push(urlResponse.error);
             return Promise.reject(this.taskResponse);
           }
-        })
+        }
       } else { //Single request processing
         //console.log({'loc': 'preProcess-SINGL', 'request': this.taskRequest, 'processMany': processMany});
 
@@ -141,40 +152,41 @@ export class Task implements ITask{
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Should be self-contained !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
   async process(parentResponse?: any, processMany: boolean = false): Promise<any> {
     try {
-      if(processMany && Array.isArray(this.processManyReqQ) && this.processManyReqQ.length > 0){
-        /*
-          MAP all request in queue, REDUCE all successful results.
-        */
-        //MAP
-        const taskReqPromises: Promise<any>[] 
-          = this.processManyReqQ
-              .map((taskReq,idx) => {
-                //console.log({'loc': `TASK[${this.key}]-process[b4]-Multi[${idx}]`, 'req': taskReq.url});
-                return TaskRequestUtils.processTaskRequest(taskReq, this.dataResolver, this.allowMany);
-              });
-        
-        //REDUCE
-        let rspResults: any 
-          = (await Promise.allSettled(taskReqPromises))
-              .map((rsp, idx) => {
-                    //console.log({'loc': `TASK[${this.key}]-process[after]-Multi[${idx}]`, 'rsp': rsp});
-                    if (rsp.status === 'fulfilled') {
-                      return rsp.value;
-                    } else  {
-                      return rsp.reason;
-                    }
-                  })
-              .reduce( //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
-                (accumulator, currentTaskRsp) => {
-                  if(currentTaskRsp.hasData()){
-                    return [ ...accumulator, ...currentTaskRsp.result];
-                  }
-                  return accumulator;
-                }, []);
- 
-        //console.log({'loc': `TASK[${this.key}-process-Multi-FINAL`, 'response': rspResults});
-        this.taskResponse.result = rspResults;
-
+      if(processMany){
+        if(Array.isArray(this.processManyReqQ) && this.processManyReqQ.length > 0){
+          // =======[MAP request in queue, REDUCE only successful results]===================
+          //MAP
+          const taskReqPromises: Promise<any>[] 
+            = this.processManyReqQ
+                .map((taskReq: IRequestRecord,idx) => {
+                  //console.log({'loc': `TASK[${this.key}]-process[b4]-Multi[${idx}]`, 'req': taskReq.url});
+                  return TaskRequestUtils.processTaskRequest(taskReq.taskRequest, this.dataResolver, this.allowMany);
+                });
+          
+          //REDUCE
+          let rspResults: any 
+            = (await Promise.allSettled(taskReqPromises))
+                .map((rsp, idx) => {
+                      //console.log({'loc': `TASK[${this.key}]-process[after]-Multi[${idx}]`, 'rsp': rsp});
+                      if (rsp.status === 'fulfilled') {
+                        return rsp.value;
+                      } else  {
+                        return rsp.reason;
+                      }
+                    })
+                .reduce(
+                  (accumulator, currentTaskRsp) => {
+                    //console.log({'loc': `TASK[${this.key}]-process[after]-reduce]`,
+                    //            'result': currentTaskRsp.result, 'errors': JSON.stringify(currentTaskRsp.errors)});
+                    if(currentTaskRsp.hasData()){
+                      return [ ...accumulator, ...currentTaskRsp.result];
+                    } 
+                    return accumulator;
+                  }, []);
+  
+          //console.log({'loc': `TASK[${this.key}-process-Multi-FINAL`, 'response': rspResults});
+          this.taskResponse.result = rspResults;
+        }
       } else {//Single request processing
         this.taskResponse = await TaskRequestUtils.processTaskRequest(this.taskRequest, this.dataResolver, this.allowMany);
         /*console.log({'loc': `TASK[${this.key}-process-Single`, 

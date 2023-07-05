@@ -14,7 +14,12 @@ import { contextPath, serverPort, version } from './utils/app.config';
 import container from './utils/inversify.config';
 import { logger } from './utils/winston.config';
 import { AccountInfoRouter } from './routes/account-info.router';
-
+import { EcrsRouter } from './routes/ecrs.router';
+import { RandomUtils } from './utils/random-util';
+import { jwtDecodeUserName } from './authentication/jwt-validator';
+import { setCurrentUser } from './middleware/current-user';
+import { middleware } from 'express-http-context';
+import { setTransactionId } from './middleware/transaction-id';
 export class AppServer {
     public static readonly PORT: number = serverPort;
     public server!: Server;
@@ -26,6 +31,7 @@ export class AppServer {
     private personInfoRouter!: PersonInfoRouter;
     private authorisedRepRouter!: AuthorisedRepRouter;
     private accountInfoRouter!: AccountInfoRouter;
+    private ecrsRouter!: EcrsRouter;
     
     constructor() {
         this.startup();
@@ -75,10 +81,25 @@ export class AppServer {
     private config(): void {
         logger.info('Configuring Server');
 
-        this.port = process.env.PORT || AppServer.PORT;
+        this.port = process.env.PORT ?? AppServer.PORT;
 
         // support application/json type post data
         this.app.use(bodyParser.json());
+
+        this.app.use(middleware);
+
+        this.app.use((req, res, next) => {
+            const traceId = req.header("x-b3-traceid") ?? RandomUtils.generateTrasactionId();
+            logger.info( "request started: "+ traceId);
+            setTransactionId(traceId);
+            next();
+        });
+
+        this.app.use((req, res, next) => {
+            const currentUser = jwtDecodeUserName(req);
+            setCurrentUser(currentUser);
+            next();
+        });
 
         this.app.use((req, res, next) => {
             res.setHeader('Access-Control-Allow-Origin', '*');
@@ -97,6 +118,8 @@ export class AppServer {
         this.app.use(contextPath + this.personInfoRouter.path, this.personInfoRouter.router);
         this.app.use(contextPath + this.authorisedRepRouter.path, this.authorisedRepRouter.router);
         this.app.use(contextPath + this.accountInfoRouter.path, this.accountInfoRouter.router);
+        this.app.use(contextPath + this.ecrsRouter.path, this.ecrsRouter.router);
+
 
         // defaul to  404 not found
         this.app.get("*", (req, res) => res.sendStatus(404));   
@@ -117,5 +140,6 @@ export class AppServer {
         this.personInfoRouter = container.resolve<PersonInfoRouter>(PersonInfoRouter);
         this.authorisedRepRouter = container.resolve<AuthorisedRepRouter>(AuthorisedRepRouter);
         this.accountInfoRouter =  container.resolve<AccountInfoRouter>(AccountInfoRouter);
+        this.ecrsRouter = container.resolve<EcrsRouter>(EcrsRouter);
     }
 }

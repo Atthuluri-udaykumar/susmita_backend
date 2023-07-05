@@ -35,6 +35,16 @@ import { IAccountInfoController } from '../controllers/interfaces/account-info-c
 import { AccountInfoService } from '../services/account-info.service';
 import { AccountInfoMockService } from '../services/mock/account-info-mock.service';
 import { IAccountInfoService } from '../services/interfaces/account-info-service.interface';
+import { IRemoveAccountService } from '../services/interfaces/remove-account-service.interface';
+import { RemoveAccountService } from '../services/remove-account.service';
+import { EcrsController } from '../controllers/ecrs.controller';
+import { IEcrsController } from '../controllers/interfaces/ecrs-controller.interface';
+import { IEcrsService } from '../services/interfaces/ecrs-service.interface';
+import { EcrsService } from '../services/ecrs.service';
+import { ISessionRepository } from '../repositories/interfaces/session-repository.interface';
+import { SessionRepository } from '../repositories/session-respository';
+import { SessionService } from '../services/session-service';
+import { ISessionService } from '../services/interfaces/session-service.interface';
 
 const container = new Container(); // Initialize the IOC bindings
 
@@ -51,6 +61,13 @@ container.bind<IAuthorisedRepController>(Symbols.IAuthorisedRepController).to(Au
 
 container.bind<IAccountInfoController>(Symbols.IAccountInfoController).to(AccountInfoController);
 
+
+container.bind<IEcrsService>(Symbols.IEcrsService).to(EcrsService);
+container.bind<IEcrsController>(Symbols.IEcrsController).to(EcrsController);
+
+container.bind<ISessionRepository>(Symbols.ISessionRepository).to(SessionRepository);
+container.bind<ISessionService>(Symbols.ISessionService).to(SessionService);
+
 if(profile == 'mock') {
     container.bind<IBulletinBoardRepository>(Symbols.IBulletinBoardRepository).to(BulletinBoardRepositoryMock);
     container.bind<IPersonInfoService>(Symbols.IPersonInfoService).to(PersonInfoMockService);
@@ -62,6 +79,7 @@ if(profile == 'mock') {
     container.bind<IPersonInfoService>(Symbols.IPersonInfoService).to(PersonInfoService);
     container.bind<IAuthorisedRepService>(Symbols.IAuthorisedRepService).to(AuthorisedRepService);
     container.bind<IAccountInfoService>(Symbols.IAccountInfoService).to(AccountInfoService);
+    container.bind<IRemoveAccountService>(Symbols.IRemoveAccountService).to(RemoveAccountService);
 }
 
 

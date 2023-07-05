@@ -47,10 +47,10 @@ export class PersonInfoService implements IPersonInfoService {
 
     const result: Map<string, TaskResponse> = new Map<string, TaskResponse>();
     for await (const nodeRsp of taskTree.parse()) {
-      console.log({'place': 'inside gen-iter', 
+      /*console.log({'place': 'inside gen-iter', 
                   'key': nodeRsp.task.key, 
                   'url': nodeRsp.task.taskRequest.url, 
-                  'response' : nodeRsp.task.taskResponse});
+                  'response' : nodeRsp.task.taskResponse});*/
       result.set(nodeRsp.task.key, nodeRsp.task.taskResponse);
     }
     return this.formatTaskResponse(result);
@@ -204,11 +204,11 @@ export class PersonInfoService implements IPersonInfoService {
               [QstnTask] [MfaTask] [SbmtrTask] [rreTask] 
     */
     //All nodes with there sub-nodes need to be defined before adding to root-node
-    rootNode.addChild(prsnFailoverNode);
-    rootNode.addChild(qstnTaskNode);
-    rootNode.addChild(idProofTaskNode);
-    rootNode.addChild(sbmtrTaskNode);
-    rootNode.addChild(rreTaskNode);
+    rootNode.addChildNode(prsnFailoverNode);
+    rootNode.addChildNode(qstnTaskNode);
+    rootNode.addChildNode(idProofTaskNode);
+    rootNode.addChildNode(sbmtrTaskNode);
+    rootNode.addChildNode(rreTaskNode);
 
     return new TaskTree(rootNode);
   }

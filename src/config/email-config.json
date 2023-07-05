@@ -12,9 +12,9 @@
             "headers": { "x-api-key": "MuqlyRpR3o7m1hhJu5E4z4FgetGpEogt3eE3fEFp" }
         },
         "imp":{
-            "baseURL": "", 
-            "timeout": 1000,  
-            "headers": { "x-api-key": "local" }
+            "baseURL": "https://r9y3ih59mb.execute-api.us-east-1.amazonaws.com/imp/emails", 
+            "timeout": 15000,  
+            "headers": { "x-api-key": "MuqlyRpR3o7m1hhJu5E4z4FgetGpEogt3eE3fEFp" }
         },
         "pro":{
             "baseURL": "", 

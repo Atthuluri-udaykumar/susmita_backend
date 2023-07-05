@@ -39,7 +39,7 @@ export class TaskNode<T extends Task> implements ITaskNode {
     this.processMany = processMany;
   }
 
-  addChild(child: TaskNode<T>) {
+  addChildNode(child: TaskNode<T>) {
     if (child) {
       child.parent = this;
       if(child.isFailoverNode) {
@@ -157,7 +157,7 @@ export class TaskNode<T extends Task> implements ITaskNode {
       if(this.parent){
         this.parent.children
                   .filter(node => !node.isFailoverNode)
-                  .forEach(node => this.addChild(node));
+                  .forEach(node => this.addChildNode(node));
       }
       return this.children;
     } else if(this.task.taskResponse.hasData()){

@@ -69,4 +69,18 @@ export class MraDataResolverService<T extends object> implements IDataResolverSe
       return Promise.reject(error);
     }
   }  
+  
+  async deleteData(url: string, data?: any): Promise<T> {
+    try {
+      const resp = await http.delete<any, ServiceResponse>(url, data);
+      //console.log(resp);
+      if (resp?.data?.result) {
+          return Promise.resolve(resp.data.result as T);
+      }
+      return Promise.resolve({} as T);
+    } catch (error: any) {
+      //error.message ??= 'Unknown error message';
+      return Promise.reject(error);
+    }
+  }  
 }

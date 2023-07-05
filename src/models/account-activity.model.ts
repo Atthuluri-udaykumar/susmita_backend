@@ -1,15 +1,8 @@
 export class AccountActivity {
-  public activityId: string | null = null;
+  public activityId: string | null =  null;
   public activityDescription: string | null = null;
 }
 
-export class ContractorData {
-  public contractorNo: string | null = null;
-  public userIdList: any[] | null = null;
-  public actionCd: string | null = null;
-  public loggedInUser: string | null = null;
-  public responseCd: string | null = null
-}
 export class EdiAccountActivity extends AccountActivity {
   public activityDt: string | null = null;
   public actvUserId: string | null = null;

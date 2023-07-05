@@ -9,7 +9,7 @@ export interface ITaskNode {
   get hasFailoverNode(): boolean;
   get failoverErrorCriteria(): string;
 
-  addChild(child: ITaskNode): void;
+  addChildNode(child: ITaskNode): void;
   fetchChildren(): any[];
   allowFailover(): boolean;
 

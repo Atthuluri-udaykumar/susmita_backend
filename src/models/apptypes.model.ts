@@ -10,6 +10,9 @@ export class AppType {
         this.name = name;
     }
 
+    public value(): string {
+        return this.name;
+    }
     
     static valueOf( name: string | null | unknown): AppType | null {
         if( typeof name != 'string') {
