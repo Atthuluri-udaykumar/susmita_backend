@@ -19,9 +19,12 @@ export class EcrsRouter implements CustomRouter {
 
     @loggable()
     private initializeRoutes(): void {
-        
+
         this.router.get('/contractorData',
             [jwtValidator, param("contractorNo").isAlphanumeric()], this.controller.getContractorData.bind(this.controller));
+
+        this.router.get('/uploadContractorList',
+            [jwtValidator, param("userId").isAlphanumeric()], this.controller.getContractorData.bind(this.controller));
     }
 
 }

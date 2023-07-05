@@ -28,4 +28,24 @@ export class EcrsService implements IEcrsService {
     }
   }
 
+
+  public async uploadContractorList(user: User, userId: string): Promise<any> {
+    const dataResolver = new CobDataResolverService<ContractorData>();
+    let reqURL = `/api/v1/parties/contractors/uploadContractorList?signedInUser=${userId}`
+    try {
+      //call endpoint
+      const contractorRes: any = await dataResolver.getData(reqURL);
+      //handle response
+      if (!contractorRes) {
+        return Promise.reject({
+          status: 200,
+          error: 'uploadContractorList: Unknown error'
+        });
+      }
+      return Promise.resolve(contractorRes);
+    } catch (error) {
+      return Promise.reject({ status: 500, error: error });
+    }
+  }
+
 }

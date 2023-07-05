@@ -17,11 +17,11 @@ export class EcrsController extends AbstractController implements IEcrsControlle
     }
 
     public async getContractorData(req: Request, res: Response, next: NextFunction): Promise<void> {
-        
+
         try {
             const contractorNo = req.query.contractorNo;
-            if( !contractorNo) {
-                throw new HttpException( 500, "Mising contractorNo");
+            if (!contractorNo) {
+                throw new HttpException(500, "Mising contractorNo");
             }
             const resData = await this.service.getContractorData(req.user!, contractorNo as string);
             setSuccessResponse(resData, res);
@@ -32,5 +32,19 @@ export class EcrsController extends AbstractController implements IEcrsControlle
         }
     }
 
+    public async uploadContractorList(req: Request, res: Response, next: NextFunction): Promise<void> {
+
+        try {
+            const userId = req.query.userId;
+            if (!userId) {
+                throw new HttpException(500, "Mising userId");
+            }
+            const resData = await this.service.uploadContractorList(req.user!, userId as string);
+            setSuccessResponse(resData, res);
+        } catch (error) {
+            logger.error(error);
+            setErrorResponse(res, error);
+        }
+    }
 
 }
