@@ -19,16 +19,19 @@ export class AccountInfoRouter implements CustomRouter {
     @loggable()
     private initializeRoutes(): void {
         this.router.get('/email',
-                    [jwtValidator], 
-                    this.controller.downloadEmail.bind(this.controller));
+            [jwtValidator],
+            this.controller.downloadEmail.bind(this.controller));
 
-        this.router.get('/', 
-                    [jwtValidator, param('accountId').isNumeric(), param('ein').isNumeric(), param('ssn').isNumeric()], 
-                    this.controller.findAccountByEinAccountIdSsn.bind(this.controller));
+        this.router.get('/',
+            [jwtValidator, param('accountId').isNumeric(), param('ein').isNumeric(), param('ssn').isNumeric()],
+            this.controller.findAccountByEinAccountIdSsn.bind(this.controller));
 
-        this.router.post('/', 
-                    [jwtValidator], this.controller.submitAction.bind(this.controller));  
+        this.router.post('/',
+            [jwtValidator], this.controller.submitAction.bind(this.controller));
 
+        this.router.get('/vetted',
+            [jwtValidator],
+            this.controller.getVettedSubmitters.bind(this.controller));
     }
 
 }
