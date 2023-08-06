@@ -239,4 +239,7 @@ export class AccountInfoMockService implements IAccountInfoService {
     return Promise.resolve([]);
   }
 
+  resetSubmitter(user: User, appType: AppType, accountId: number | null, segmentId: string | null, userId: string | null, sbmtrId: string | null): Promise<[]> {
+    return Promise.resolve([]);
+  }
 }

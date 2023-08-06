@@ -143,8 +143,32 @@ export class AccountInfoController extends AbstractController {
     @loggable(false, false)
     public async getVettedSubmitters(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const base64ByteStream = await this.service.(req.user!);
+            const base64ByteStream = await this.service.getVettedSubmitters(req.user!);
             setSuccessResponse(base64ByteStream, res);
+        } catch (error) {
+            logger.error(error);
+            setErrorResponse(res, error);
+        }
+    }
+
+    @loggable(false, false)
+    public async resetSubmitter(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const appType = AppType.valueOf(req.query.appType);
+        const accountId = req.query.accountId;
+        const segmentId: any = req.query.segmentId
+        const userId: any = req.query.userId;
+        const sbmtrId: any = req.query.sbmtrId;
+        try {
+            if (!appType) {
+                res.status(400).json({ message: "Your request was invalid. You must pass in an appType and either accountId or ein or ssn in the querystring." });
+            } else {
+                if (accountId) {
+                    const accountInfo = await this.service.resetSubmitter(req.user!, appType, Number(accountId), segmentId, userId, sbmtrId);
+                    setSuccessResponse(accountInfo, res);
+                } else {
+                    res.status(400).json({ message: "Your request was invalid. You must pass in an appType and either accountId or ein or ssn in the querystring." });
+                }
+            }
         } catch (error) {
             logger.error(error);
             setErrorResponse(res, error);

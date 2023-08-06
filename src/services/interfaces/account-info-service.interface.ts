@@ -14,4 +14,5 @@ export interface IAccountInfoService {
     emailNotification<T extends AccountActivity>(user: User, accountId: number | null, emailFrom: string | null, emailTo: string | null): Promise<T[]>;
     downloadEmail(user: User, appType: AppType | null, emailImageId: string | null): Promise<any>;
     getVettedSubmitters(user: User): Promise<any>;
+    resetSubmitter(user: User, appType: AppType, accountId: number | null, segmentId: string | null, userId: string | null, sbmtrId: string | null): Promise<any>;
 }

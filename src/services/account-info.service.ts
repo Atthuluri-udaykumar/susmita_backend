@@ -637,4 +637,36 @@ export class AccountInfoService implements IAccountInfoService {
       return Promise.reject({ status: 500, error: error });
     }
   }
+
+
+  private async resetSubmitter(user: User, appType: AppType, accountId: number, segmentId: string, userId: string, sbmtrId: string): Promise<Submitter> {
+    const cobDataResolver = new CobDataResolverService<Submitter>(user);
+    let reqURL = `/api/v1/users/edi/submitter/G/${accountId}/I`
+    try {
+      let payloadData = {
+        userId: userId,
+        action: "I",
+        sbmtrId: sbmtrId,
+        actionType: "I",
+        applicationCode: appType,
+        segmentId: segmentId
+      }
+
+      //call endpoint
+      const resetSubmitterRes: Submitter = await cobDataResolver.postData(reqURL, payloadData);
+      //handle response
+      if (!resetSubmitterRes) {
+        return Promise.reject({
+          status: 200,
+          error: 'resetSubmitterRes: Unknown error'
+        });
+      }
+
+      return Promise.resolve(resetSubmitterRes);
+
+    } catch (error) {
+      return Promise.reject({ status: 500, error: error });
+    }
+  }
+
 }
