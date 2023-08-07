@@ -37,9 +37,6 @@ export class AccountInfoRouter implements CustomRouter {
             [jwtValidator, param('accountId').isNumeric(), param('ein').isNumeric(), param('ssn').isNumeric()],
             this.controller.findAccountByEinAccountIdSsn.bind(this.controller));
 
-        this.router.get('/resetSubmitter',
-            [jwtValidator, param('accountId').isNumeric(), param('userId').isAlphanumeric(), param('sbmtrId').isNumeric(), param('segmentId').isNumeric()],
-            this.controller.resetSubmitter.bind(this.controller));
     }
 
 }

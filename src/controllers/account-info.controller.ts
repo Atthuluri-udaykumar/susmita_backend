@@ -126,6 +126,9 @@ export class AccountInfoController extends AbstractController {
                         fromLocal_MMddyyyy(emailFrom),
                         fromLocal_MMddyyyy(emailTo));
                     return setSuccessResponse(emailNotifications, res)
+                } else if (accountInfo.actionInfo.actionResendProfileReport) {
+                    const activity = await this.service.resetSubmitter(req.user!, appType, accountId)
+                    return setSuccessResponse(activity, res);
                 }
             } else {
                 return setErrorResponse(res, "Bad Request", 400, "Your request was invalid. You must pass in AppType param and valid Account info with selected action in request-body.");
@@ -145,30 +148,6 @@ export class AccountInfoController extends AbstractController {
         try {
             const base64ByteStream = await this.service.getVettedSubmitters(req.user!);
             setSuccessResponse(base64ByteStream, res);
-        } catch (error) {
-            logger.error(error);
-            setErrorResponse(res, error);
-        }
-    }
-
-    @loggable(false, false)
-    public async resetSubmitter(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const appType = AppType.valueOf(req.query.appType);
-        const accountId = req.query.accountId;
-        const segmentId: any = req.query.segmentId
-        const userId: any = req.query.userId;
-        const sbmtrId: any = req.query.sbmtrId;
-        try {
-            if (!appType) {
-                res.status(400).json({ message: "Your request was invalid. You must pass in an appType and either accountId or ein or ssn in the querystring." });
-            } else {
-                if (accountId) {
-                    const accountInfo = await this.service.resetSubmitter(req.user!, appType, Number(accountId), segmentId, userId, sbmtrId);
-                    setSuccessResponse(accountInfo, res);
-                } else {
-                    res.status(400).json({ message: "Your request was invalid. You must pass in an appType and either accountId or ein or ssn in the querystring." });
-                }
-            }
         } catch (error) {
             logger.error(error);
             setErrorResponse(res, error);

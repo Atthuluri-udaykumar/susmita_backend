@@ -639,17 +639,16 @@ export class AccountInfoService implements IAccountInfoService {
   }
 
 
-  private async resetSubmitter(user: User, appType: AppType, accountId: number, segmentId: string, userId: string, sbmtrId: string): Promise<Submitter> {
+  public async resetSubmitter(user: User, appType: AppType, accountId: number): Promise<Submitter> {
     const cobDataResolver = new CobDataResolverService<Submitter>(user);
     let reqURL = `/api/v1/users/edi/submitter/G/${accountId}/I`
     try {
       let payloadData = {
-        userId: userId,
+        userId: user.userName,
         action: "I",
-        sbmtrId: sbmtrId,
+        sbmtrId: accountId,
         actionType: "I",
         applicationCode: appType,
-        segmentId: segmentId
       }
 
       //call endpoint
