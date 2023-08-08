@@ -110,6 +110,7 @@ export class AccountInfoController extends AbstractController {
                     || accountInfo.actionInfo.actionResetPin
                     || accountInfo.actionInfo.actionVetSubmitter
                     || accountInfo.actionInfo.actionRemoveSubmitter
+                    || accountInfo.actionInfo.actionResendProfileReport
                 ) {
                     const updateResult = await this.service.submitAction(req.user!, appType, accountInfo);
                     return setSuccessResponse(updateResult, res);
@@ -126,9 +127,6 @@ export class AccountInfoController extends AbstractController {
                         fromLocal_MMddyyyy(emailFrom),
                         fromLocal_MMddyyyy(emailTo));
                     return setSuccessResponse(emailNotifications, res)
-                } else if (accountInfo.actionInfo.actionResendProfileReport) {
-                    const activity = await this.service.resetSubmitter(req.user!, appType, accountId)
-                    return setSuccessResponse(activity, res);
                 }
             } else {
                 return setErrorResponse(res, "Bad Request", 400, "Your request was invalid. You must pass in AppType param and valid Account info with selected action in request-body.");

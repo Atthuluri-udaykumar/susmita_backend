@@ -244,6 +244,13 @@ export class AccountInfoService implements IAccountInfoService {
             return Promise.reject(pinReset.error);
           }
         }
+      } else if (acctInfo.actionInfo.actionResendProfileReport) {
+        const resendProfileReport: any = await EmailService.sendResendProfileReportEmail(acctInfo.arPersonInfo, appType);
+        if (resendProfileReport && !isEmptyObject(resendProfileReport)) {
+          if (resendProfileReport.error) {
+            return Promise.reject(resendProfileReport.error);
+          }
+        }
       } else if (acctInfo.actionInfo.actionRemoveSubmitter) {
         if ((appType !== AppType.GHPRP) && response.arDelete && response.arDelete === 'Y') {
           const arPrsn: MirPrsn = await this.findARPersonInfoByEmail(acctInfo.arPersonInfo.email);
@@ -632,36 +639,6 @@ export class AccountInfoService implements IAccountInfoService {
           error: 'get vetted submitters: Unknown error'
         });
       }
-
-    } catch (error) {
-      return Promise.reject({ status: 500, error: error });
-    }
-  }
-
-
-  public async resetSubmitter(user: User, appType: AppType, accountId: number): Promise<Submitter> {
-    const cobDataResolver = new CobDataResolverService<Submitter>(user);
-    let reqURL = `/api/v1/users/edi/submitter/G/${accountId}/I`
-    try {
-      let payloadData = {
-        userId: user.userName,
-        action: "I",
-        sbmtrId: accountId,
-        actionType: "I",
-        applicationCode: appType,
-      }
-
-      //call endpoint
-      const resetSubmitterRes: Submitter = await cobDataResolver.postData(reqURL, payloadData);
-      //handle response
-      if (!resetSubmitterRes) {
-        return Promise.reject({
-          status: 200,
-          error: 'resetSubmitterRes: Unknown error'
-        });
-      }
-
-      return Promise.resolve(resetSubmitterRes);
 
     } catch (error) {
       return Promise.reject({ status: 500, error: error });
