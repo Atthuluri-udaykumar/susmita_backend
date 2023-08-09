@@ -49,18 +49,18 @@ export class EmailService {
 
     }
 
-    public static async sendResendProfileReportEmail(personDetails: PersonDetails, appType: AppType): Promise<any> {
-        let key: string;
+    public static async sendResendProfileReportEmail(personDetails: PersonDetails, appType: AppType, sbmtrType: string): Promise<any> {
+        let key: string = '';
+
         const category = 'EDI';
-        switch (appType) {
-            case AppType.WCS:
-                key = 'W001';
-                break;
-            case AppType.MRP:
-                key = 'M001';
-                break;
-            default:
-                key = 'C001';
+        if (appType === AppType.WCS && sbmtrType === 'C' || appType === AppType.MRP && sbmtrType === 'C') {
+            key = 'W002';
+        } else if (appType === AppType.WCS && sbmtrType === 'S' || appType === AppType.MRP && sbmtrType === 'S') {
+            key = 'W003';
+        } else if (appType === AppType.WCS && sbmtrType === 'R' || appType === AppType.MRP && sbmtrType === 'R') {
+            key = 'W004';
+        } else if (appType === AppType.GHPRP && ['I', 'E'].includes(sbmtrType)) {
+            key = 'C002';
         }
 
         const message = {
@@ -69,6 +69,7 @@ export class EmailService {
             To: [EmailService.sanitizeEmailAddress(personDetails.email)],
             Cc: [EmailService.sanitizeEmailAddress(personDetails.email)],
             ApplicationType: appType,
+            SbmtrType: sbmtrType,
             ...personDetails
         };
 

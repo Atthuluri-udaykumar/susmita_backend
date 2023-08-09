@@ -245,7 +245,7 @@ export class AccountInfoService implements IAccountInfoService {
           }
         }
       } else if (acctInfo.actionInfo.actionResendProfileReport) {
-        const resendProfileReport: any = await EmailService.sendResendProfileReportEmail(acctInfo.arPersonInfo, appType);
+        const resendProfileReport: any = await EmailService.sendResendProfileReportEmail(acctInfo.arPersonInfo, appType, submtrInfo.type);
         if (resendProfileReport && !isEmptyObject(resendProfileReport)) {
           if (resendProfileReport.error) {
             return Promise.reject(resendProfileReport.error);
